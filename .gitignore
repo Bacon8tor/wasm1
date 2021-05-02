@@ -4,6 +4,15 @@ src/Sources/Code/MSFS
 src/_PackageInt
 PackageSources/
 Packages/
+src/Sources/Code/MSFS/
+src/Sources\Code/Debug/
+src/Sources/Code/x64/
+src/Sources/Code/SampleClients/CPP_Client/Debug/
+src/Sources/Code/SampleClients/CPP_Client/x64/
+src/Sources/Code/SampleClients/CS_Client/obj/
+src/Sources/Code/SampleClients/CS_Client/bin/
+src/Sources/Code/SampleClients/VB_Client/obj/
+src/Sources/Code/SampleClients/VB_Client/bin/
 
 # Log files
 *.log
@@ -24,3 +33,4 @@ Thumbs.db
 *.mov
 *.wmv
 
+/src/Sources/Code/.editorconfig

@@ -77,9 +77,11 @@
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
-      <Command>mkdir "$(SolutionDir)..\..\PackageSources\modules"
-copy /Y "$(TargetPath)" "$(SolutionDir)..\..\PackageSources\modules"
-copy /Y "$(TargetDir)events*.txt" "$(SolutionDir)..\..\PackageSources\modules"</Command>
+      <Command>copy /Y "$(TargetPath)" "$(SolutionDir)..\..\PackageSources\modules"
+copy /Y "$(SolutionDir)events*.txt" "$(SolutionDir)..\..\PackageSources\modules"
+after_build
+Echo done!
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|MSFS'">
@@ -106,9 +108,9 @@ copy /Y "$(TargetDir)events*.txt" "$(SolutionDir)..\..\PackageSources\modules"</
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
-      <Command>mkdir "$(SolutionDir)..\..\PackageSources\modules"
-copy /Y "$(TargetPath)" "$(SolutionDir)..\..\PackageSources\modules"
-copy /Y "$(TargetDir)events.txt" "$(SolutionDir)..\..\PackageSources\modules"</Command>
+      <Command>copy /Y "$(TargetPath)" "$(SolutionDir)..\..\PackageSources\modules"
+copy /Y "$(SolutionDir)events*.txt" "$(SolutionDir)..\..\PackageSources\modules"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -119,6 +121,9 @@ copy /Y "$(TargetDir)events.txt" "$(SolutionDir)..\..\PackageSources\modules"</C
   </ItemGroup>
   <ItemGroup>
     <Text Include="events.txt">
+      <DeploymentContent>true</DeploymentContent>
+    </Text>
+    <Text Include="wasm_vars.txt">
       <DeploymentContent>true</DeploymentContent>
     </Text>
   </ItemGroup>

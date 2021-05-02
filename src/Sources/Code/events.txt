@@ -1,4 +1,8 @@
-// STANDARD
+//For some reason the code does not see any events with ID=0
+//so we need a dummy placeholder here
+DUMMY#()
+//
+CUST_VAR#()
 AILERON_TRIM_LEFT#(>K:AILERON_TRIM_LEFT)
 AILERON_TRIM_RIGHT#(>K:AILERON_TRIM_RIGHT)
 AILERONS_LEFT#(>K:AILERONS_LEFT)
