@@ -117,7 +117,7 @@ copy /Y "$(SolutionDir)events*.txt" "$(SolutionDir)..\..\PackageSources\modules"
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Module.h" />
+    <ClInclude Include="MobiFlight.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="events.txt">

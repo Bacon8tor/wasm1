@@ -5,6 +5,9 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include "..\..\MobiFlight.h"
+
+#pragma region Declarations
 
 HRESULT hr;
 HANDLE hSimconnect;
@@ -12,113 +15,52 @@ HANDLE hSimconnect;
 // Reference to user aircraft.
 SIMCONNECT_OBJECT_ID objectID = SIMCONNECT_OBJECT_ID_USER;
 
-
-const char* MobiFlightEventPrefix = "MobiFlight.";
 const char* FileEventsMobiFlight = "events.txt";
-const char* FileEventsUser = "events.user.txt";
 const char* FileVarsMobiFlight = "wasm_vars.txt";
-const char* FileVarsUser = "wasm_vars.user.txt";
-const std::string EMPTY_CMD = std::string("()");
 
-std::vector<std::pair<std::string, std::string>> CodeVars;
+std::map<std::string, int> CodeEventNames;
 std::map<std::string, int> CodeVarNames;
 
+const int INVALID_WASM_EVENT = -1;
 const int INVALID_WASM_SIMVAR = -1;
-const int WASM_SIMVAR_INDEX_BASE = 5000;
-SIMCONNECT_CLIENT_DATA_ID ClientDataID = WASM_SIMVAR_INDEX_BASE;
-DWORD dwSizeOfDouble = 8;
-
-enum MOBIFLIGHT_GROUP
-{
-	DEFAULT
-};
-
-const char* clientDataName = "CUST_VAR_DATA";
-const char* clientDataEventName = "CUST_VAR";
-
-static enum DATA_DEFINE_ID {
-	DEFINITION_1 = 12,
-};
+SIMCONNECT_CLIENT_DATA_ID ClientDataID = 1;
 
 static enum DATA_REQUEST_ID {
-	WASM_VAR_DATA_REQUEST = 1000,
+    //Must ensure that this ID does not conflict with any of those 
+    //loaded from the file events.txt, in other words this must be 
+    //larger than the maximum number of possible entries in this file.
+    WASM_VAR_DATA_REQUEST = 5000,
 };
 
-std::pair<std::string, std::string> splitIntoPair(std::string value, char delimiter) {
-    auto index = value.find(delimiter);
-    std::pair<std::string, std::string> result;
-    if (index != std::string::npos) {
-
-        // Split around ':' character
-        result = std::make_pair(
-            value.substr(0, index),
-            value.substr(index + 1)
-        );
-
-        // Trim any leading ' ' in the value part
-        // (you may wish to add further conditions, such as '\t')
-        while (!result.second.empty() && result.second.front() == ' ') {
-            result.second.erase(0, 1);
-        }
-    }
-    else {
-        // Split around ':' character
-        result = std::make_pair(
-            value,
-            std::string("(>H:" + value + ")")
-        );
-    }
-
-    return result;
-}
-
-void LoadVarDefinitions(const char* fileName) {
-	std::ifstream file(fileName);
-	std::string line;
-
-	while (std::getline(file, line)) {
-		if (line.find("//") != std::string::npos) continue;
-		std::string line2 = line.substr(0, line.size() - 1); //remove the trailing garbage
-		std::pair<std::string, std::string> codeEvent = splitIntoPair(line2, '#');
-		CodeVars.push_back(codeEvent);
-	}
-
-	file.close();
-}
+#pragma endregion
 
 void RegisterEvents() {
 
     HRESULT hr;
 
-//    DWORD eventID = 0;
-//
-//	for (const auto& value : CodeEvents) {
-//		std::string eventCommand = value.second;
-//		std::string eventName = std::string(MobiFlightEventPrefix) + value.first;
-//
-//		hr = SimConnect_MapClientEventToSimEvent(g_hSimConnect, eventID, eventName.c_str());
-//		hr = SimConnect_AddClientEventToNotificationGroup(g_hSimConnect, MOBIFLIGHT_GROUP::DEFAULT, eventID, false);
-//
-//#if _DEBUG
-//		if (hr != S_OK) fprintf(stderr, "MobiFlight: Error on registering Event %s with ID %u for code %s", eventName.c_str(), eventID, eventCommand.c_str());
-//		else fprintf(stderr, "MobiFlight: Success on registering Event %s with ID %u for code %s", eventName.c_str(), eventID, eventCommand.c_str());
-//#endif
-//
-//		eventID++;
-//	}
+    DWORD eventID = 0;
+
+	for (const auto& value : CodeEvents) {
+		std::string eventCommand = value.second;
+		std::string eventName = std::string(MobiFlightEventPrefix) + value.first;
+
+        CodeEventNames.insert(std::make_pair(eventName, eventID));
+
+		hr = SimConnect_MapClientEventToSimEvent(hSimconnect, eventID, eventName.c_str());
+		hr = SimConnect_AddClientEventToNotificationGroup(hSimconnect, MOBIFLIGHT_GROUP::DEFAULT, eventID, false);
+
+#if _DEBUG
+		if (hr != S_OK) fprintf(stderr, "MobiFlight: Error on registering Event %s with ID %u for code %s", eventName.c_str(), eventID, eventCommand.c_str());
+		//else fprintf(stderr, "MobiFlight: Success on registering Event %s with ID %u for code %s", eventName.c_str(), eventID, eventCommand.c_str());
+#endif
+
+		eventID++;
+	}
 
     hr = SimConnect_MapClientEventToSimEvent(hSimconnect, WASM_VAR_DATA_REQUEST, clientDataEventName);
     hr = SimConnect_AddClientEventToNotificationGroup(hSimconnect, MOBIFLIGHT_GROUP::DEFAULT, WASM_VAR_DATA_REQUEST, false);
     
     SimConnect_SetNotificationGroupPriority(hSimconnect, MOBIFLIGHT_GROUP::DEFAULT, SIMCONNECT_GROUP_PRIORITY_HIGHEST);
-}
-
-DWORD GetCustSimVarIndex(const char *varName) {
-
-    if (CodeVarNames.find(varName) != CodeVarNames.end())
-        return CodeVarNames.at(varName);
-    else
-        return INVALID_WASM_SIMVAR;
 }
 
 void RegisterVars() {
@@ -143,8 +85,21 @@ void RegisterVars() {
 	}
 }
 
-// Definition of the client data area format
-double data = 1.;
+DWORD GetCustEventIndex(const char* eventName) {
+
+    if (CodeEventNames.find(eventName) != CodeEventNames.end())
+        return CodeEventNames.at(eventName);
+    else
+        return INVALID_WASM_EVENT;
+}
+
+DWORD GetCustSimVarIndex(const char* varName) {
+
+    if (CodeVarNames.find(varName) != CodeVarNames.end())
+        return CodeVarNames.at(varName);
+    else
+        return INVALID_WASM_SIMVAR;
+}
 
 // SimConnect dispatch routine.
 void CALLBACK dispatchRoutine(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext) {
@@ -177,14 +132,38 @@ void CALLBACK dispatchRoutine(SIMCONNECT_RECV* pData, DWORD cbData, void* pConte
     }
 }
 
+void transmitEvent(std::string eventName) {
+    DWORD evt_Index = GetCustEventIndex(eventName.c_str());
+
+    if (evt_Index == INVALID_WASM_EVENT) {
+        std::cout << "Error: Invalid WASM_Event: " << eventName << "\n";
+    }
+    else {
+        std::cout << "Transmitting WASM event [" << eventName << "]" << "\n";
+        SimConnect_TransmitClientEvent(hSimconnect, objectID, evt_Index, 0, SIMCONNECT_GROUP_PRIORITY_HIGHEST, SIMCONNECT_EVENT_FLAG_GROUPID_IS_PRIORITY);
+    }
+}
+
+void transmitVarRequest(std::string varName) {
+    DWORD varWASM_Index = GetCustSimVarIndex(varName.c_str());
+
+    if (varWASM_Index == INVALID_WASM_SIMVAR) {
+        std::cout << "Error: Invalid WASM_SimVar: " << varName << "\n";
+    }
+    else {
+        std::cout << "Transmitting data request for WASM_SimVar [" << varName << "]" << "\n";
+        SimConnect_TransmitClientEvent(hSimconnect, objectID, WASM_VAR_DATA_REQUEST, varWASM_Index, SIMCONNECT_GROUP_PRIORITY_HIGHEST, SIMCONNECT_EVENT_FLAG_GROUPID_IS_PRIORITY);
+        SimConnect_RequestClientData(hSimconnect, ClientDataID, varWASM_Index, varWASM_Index, SIMCONNECT_CLIENT_DATA_PERIOD_ONCE, SIMCONNECT_CLIENT_DATA_REQUEST_FLAG_DEFAULT, 0, 0, 0);
+    }
+}
+
 int main()
 {
     std::cout << "Simconnect Client Data Area testing.\n";
 
     // load defintions
+    LoadEventDefinitions(FileEventsMobiFlight);
     LoadVarDefinitions(FileVarsMobiFlight);
-    int varDefinition = CodeVars.size();
-    LoadVarDefinitions(FileVarsUser);
 
     // Open the connection.
     hr = SimConnect_Open(&hSimconnect, "CPP_Client", nullptr, 0, 0, 0);
@@ -196,41 +175,23 @@ int main()
         // Map an ID to the Client Data Area.
         hr = SimConnect_MapClientDataNameToID(hSimconnect, clientDataName, ClientDataID);
 
-        // Set up a custom Client Data Area.
-        DWORD sz = CodeVars.size() * dwSizeOfDouble;
-        hr &= SimConnect_CreateClientData(hSimconnect, ClientDataID, sz, SIMCONNECT_CLIENT_DATA_REQUEST_FLAG_DEFAULT);
-        fprintf(stderr, "MobiFlight: SimConnect_CreateClientData size: %u", sz);
-
         RegisterVars();
-
-        //// Request the client data periodically.
-        //hr &= SimConnect_RequestClientData(hSimconnect, ClientDataID, REQUEST_1, DEFINITION_1, SIMCONNECT_CLIENT_DATA_PERIOD_SECOND, SIMCONNECT_CLIENT_DATA_REQUEST_FLAG_DEFAULT);
 
         /*************** RUN THE DISPATCH *****************************/
         if (S_OK == hr) {
-            std::cout << "Setup client data area: OK.\n";
-            // Set initial client data.
-            hr = SimConnect_SetClientData(hSimconnect, ClientDataID, DEFINITION_1, SIMCONNECT_CLIENT_DATA_SET_FLAG_DEFAULT, 0, sizeof(data), &data);
             int quit = 0;
             while (!quit) {
                 // Perform callback routine.
                 SimConnect_CallDispatch(hSimconnect, dispatchRoutine, NULL);
 
-                // Wait for data from the WASM.
-                const char* varName = "MobiFlight.DA62_DEICE_PUMP";
+                // Request data from the WASM.
+                transmitVarRequest("MobiFlight.DA62_DEICE_PUMP");
+                transmitVarRequest("MobiFlight.DA62_ICE_LIGHT_MAX_STATE_ENABLED");
 
-                DWORD varWASM_Index = GetCustSimVarIndex(varName);
-                if(varWASM_Index == INVALID_WASM_SIMVAR) {
-                    std::cout << "Error: Invalid WASM_SimVar: " << varName << "\n";
-                }
-                else {
-                    std::cout << "Transmitting data request for WASM_SimVar [" << varName << "]" << "\n";
-                    SimConnect_TransmitClientEvent(hSimconnect, objectID, WASM_VAR_DATA_REQUEST, varWASM_Index, SIMCONNECT_GROUP_PRIORITY_HIGHEST, SIMCONNECT_EVENT_FLAG_GROUPID_IS_PRIORITY);
-                    SimConnect_RequestClientData(hSimconnect, ClientDataID, varWASM_Index, varWASM_Index, SIMCONNECT_CLIENT_DATA_PERIOD_ONCE, SIMCONNECT_CLIENT_DATA_REQUEST_FLAG_DEFAULT, 0, 0, 0);
-                }
+                // Send an event to the WASM.
+                transmitEvent("MobiFlight.AS1000_PFD_SOFTKEYS_6");
 
-                // Take it easy, no need to rush these events.
-                Sleep(1000);
+                Sleep(2000);
             }
         }
     }

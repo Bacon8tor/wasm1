@@ -6,31 +6,20 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "Module.h"
+#include "MobiFlight.h"
 #include <map>
+
+#pragma region Declarations
 
 HANDLE g_hSimConnect;
 const char* version = "0.3.0";
-const char* MobiFlightEventPrefix = "MobiFlight.";
 const char* FileEventsMobiFlight = "modules/events.txt";
 const char* FileEventsUser = "modules/events.user.txt";
 const char* FileVarsMobiFlight = "modules/wasm_vars.txt";
 const char* FileVarsUser = "modules/wasm_vars.user.txt";
-const std::string EMPTY_CMD = std::string("()");
-
-std::vector<std::pair<std::string, std::string>> CodeEvents;
-std::vector<std::pair<std::string, std::string>> CodeVars;
-std::vector<ID> CodeVarIDs;
-//std::map<std::string, int> CodeVarNames;
 
 const int WASM_SIMVAR_INDEX_BASE = 5000;
 SIMCONNECT_CLIENT_DATA_ID ClientDataID = WASM_SIMVAR_INDEX_BASE;
-DWORD dwSizeOfDouble = 8;
-
-enum MOBIFLIGHT_GROUP
-{
-	DEFAULT
-};
 
 enum eEvents
 {
@@ -42,76 +31,13 @@ enum eVars
 	VAR_FLIGHT_LOADED,
 };
 
-const char* clientDataName = "CUST_VAR_DATA";
-
-static enum DATA_DEFINE_ID {
-	DEFINITION_1 = 12,
-};
-
 static enum DATA_REQUEST_ID {
 	REQUEST_1 = 10,
 };
 
-// Definition of the client data area format
-double data = 1.;
-
 void CALLBACK MyDispatchProc(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext);
 
-std::pair<std::string, std::string> splitIntoPair(std::string value, char delimiter) {
-	auto index = value.find(delimiter);
-	std::pair<std::string, std::string> result;
-	if (index != std::string::npos) {
-
-		// Split around ':' character
-		result = std::make_pair(
-			value.substr(0, index),
-			value.substr(index + 1)
-		);
-
-		// Trim any leading ' ' in the value part
-		// (you may wish to add further conditions, such as '\t')
-		while (!result.second.empty() && result.second.front() == ' ') {
-			result.second.erase(0, 1);
-		}
-	}
-	else {
-		// Split around ':' character
-		result = std::make_pair(
-			value,
-			std::string("(>H:" + value + ")")
-		);
-	}
-
-	return result;
-}
-
-void LoadEventDefinitions(const char * fileName) {
-	std::ifstream file(fileName);
-	std::string line;
-
-	while (std::getline(file, line)) {
-		if (line.find("//") != std::string::npos) continue;
-
-		std::pair<std::string, std::string> codeEvent = splitIntoPair(line, '#');
-		CodeEvents.push_back(codeEvent);
-	}
-
-	file.close();
-}
-
-void LoadVarDefinitions(const char* fileName) {
-	std::ifstream file(fileName);
-	std::string line;
-
-	while (std::getline(file, line)) {
-		if (line.find("//") != std::string::npos) continue;
-		std::string line2 = line.substr(0, line.size() - 1); //remove the trailing garbage
-		std::pair<std::string, std::string> codeEvent = splitIntoPair(line2, '#');
-		CodeVars.push_back(codeEvent);
-	}
-
-	file.close();
-}
+#pragma endregion
 
 void RegisterEvents() {
 	DWORD eventID = 0;
@@ -142,10 +68,12 @@ void RegisterVars() {
 		std::string varName = std::string(MobiFlightEventPrefix) + value.first;
 
 		//CodeVarNames.insert(std::make_pair(varName, varID));
+		//std::string temp = std::string("XMLVAR_DEICEPump");
+		//fprintf(stderr, "MobiFlight.getVarFromSim() %s length: %i\n", temp.c_str(), temp.length());
 
-		PCSTRINGZ var_name = varCommand.c_str();
-		ID cust_var = check_named_variable(var_name);
-		CodeVarIDs.push_back(cust_var);
+		//PCSTRINGZ var_name = varCommand.c_str();
+		//ID cust_var = check_named_variable(var_name);
+		//CodeVarIDs.push_back(cust_var);
 		//if (cust_var < 0)
 		//	fprintf(stderr, "MobiFlight.getVarFromSim() invalid named_variable: %u, %s: %i\n", varID, var_name, varCommand.length());
 		//else
@@ -154,7 +82,7 @@ void RegisterVars() {
 		DWORD offs = varID * dwSizeOfDouble;
 		// Add a double to the data definition.
 		SimConnect_AddToClientDataDefinition(g_hSimConnect, varID, offs, dwSizeOfDouble);
-		fprintf(stderr, "MobiFlight: SimConnect_AddToClientDataDefinition index: %u, offset: %u", varID, offs);
+		//fprintf(stderr, "MobiFlight: SimConnect_AddToClientDataDefinition index: %u, offset: %u", varID, offs);
 
 #if _DEBUG
 		fprintf(stderr, "MobiFlight: Registered Var %s with ID %u for code %s", varName.c_str(), varID, varCommand.c_str());
@@ -237,6 +165,7 @@ bool getVarFromSim(UINT32 iIndex)
 {
 	std::string named_var = std::string(CodeVars[iIndex].second);
 	int sz = sizeof(data);
+
 	//fprintf(stderr, "getVarFromSim(): %u, %s\n", iIndex, named_var.c_str());
 
 	FLOAT64 lvarValue = 0.0;
@@ -256,8 +185,8 @@ bool getVarFromSim(UINT32 iIndex)
 	//}
 
 	PCSTRINGZ var_name = named_var.c_str();
-	ID cust_var = CodeVarIDs[iIndex];
-
+	//ID cust_var = CodeVarIDs[iIndex];
+	ID cust_var = check_named_variable(var_name);
 	if (cust_var < 0) {
 		fprintf(stderr, "MobiFlight.getVarFromSim() invalid named_variable: %s\n", var_name);
 		lvarValue = 0;
@@ -269,7 +198,7 @@ bool getVarFromSim(UINT32 iIndex)
 
 	data = lvarValue;
 
-	//fprintf(stderr, "MobiFlight.getVarFromSim() SimConnect_SetClientData: %s-%u: %f\n", named_var.c_str(), iIndex, data);
+	fprintf(stderr, "MobiFlight.getVarFromSim() SimConnect_SetClientData: %s-%u: %f\n", named_var.c_str(), iIndex, data);
 	SimConnect_SetClientData(g_hSimConnect, ClientDataID, iIndex, SIMCONNECT_CLIENT_DATA_SET_FLAG_DEFAULT, 0, sz, &data);
 
 	//fprintf(stderr, "MobiFlight.getVarFromSim() end\n");
@@ -288,13 +217,13 @@ void CALLBACK MyDispatchProc(SIMCONNECT_RECV* pData, DWORD cbData, void* pContex
 		UINT32 evData = evt->dwData;
 		//std::string evData = evt->;
 
-		//fprintf(stderr, "Received eventID: %u\n", eventID);
+		fprintf(stderr, "Received eventID: %u\n", eventID);
 
 		if (eventID < CodeEvents.size()) {
 			//fprintf(stderr, "Passed check eventID: %u\n", eventID);
 			// We got a Code Event or a User Code Event
 			if (eventID == 1) {
-				//fprintf(stderr, "CUSTOM_VAR %u, %u, %s\n", eventID, groupID, evData);
+				fprintf(stderr, "CUSTOM_VAR %u, %u, %s\n", eventID, groupID, evData);
 
 				//std::make_shared<std::string>("TESTY")
 				getVarFromSim(evData);
@@ -304,7 +233,7 @@ void CALLBACK MyDispatchProc(SIMCONNECT_RECV* pData, DWORD cbData, void* pContex
 				std::string command = std::string(CodeEvents[CodeEventId].second);
 				if (command == EMPTY_CMD) {
 					std::string name = std::string(CodeEvents[CodeEventId].first);
-					fprintf(stderr, "Got a Custom event %s\n", name.c_str());
+					//fprintf(stderr, "Got a Custom event %s\n", name.c_str());
 				}
 				else {
 					//fprintf(stderr, "execute %s\n", command.c_str());
@@ -322,5 +251,6 @@ void CALLBACK MyDispatchProc(SIMCONNECT_RECV* pData, DWORD cbData, void* pContex
 	default:
 		break;
 	}
-	fprintf(stderr, "Received event end\n");
+
+	//fprintf(stderr, "Received event end\n");
 }

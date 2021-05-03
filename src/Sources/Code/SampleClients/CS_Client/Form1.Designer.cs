@@ -32,6 +32,8 @@ namespace CS_Client2
             this.btnConnect = new System.Windows.Forms.Button();
             this.richResponse = new System.Windows.Forms.RichTextBox();
             this.btnDisconnect = new System.Windows.Forms.Button();
+            this.btnSendEvent = new System.Windows.Forms.Button();
+            this.btnRequestData = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -62,16 +64,38 @@ namespace CS_Client2
             this.btnDisconnect.UseVisualStyleBackColor = true;
             this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
             // 
+            // btnSendEvent
+            // 
+            this.btnSendEvent.Location = new System.Drawing.Point(188, 12);
+            this.btnSendEvent.Name = "btnSendEvent";
+            this.btnSendEvent.Size = new System.Drawing.Size(124, 54);
+            this.btnSendEvent.TabIndex = 9;
+            this.btnSendEvent.Text = "Send Event";
+            this.btnSendEvent.UseVisualStyleBackColor = true;
+            this.btnSendEvent.Click += new System.EventHandler(this.btnSendEvent_Click);
+            // 
+            // btnRequestData
+            // 
+            this.btnRequestData.Location = new System.Drawing.Point(12, 12);
+            this.btnRequestData.Name = "btnRequestData";
+            this.btnRequestData.Size = new System.Drawing.Size(124, 54);
+            this.btnRequestData.TabIndex = 8;
+            this.btnRequestData.Text = "Request SimVars";
+            this.btnRequestData.UseVisualStyleBackColor = true;
+            this.btnRequestData.Click += new System.EventHandler(this.btnRequestData_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnSendEvent);
+            this.Controls.Add(this.btnRequestData);
             this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.richResponse);
             this.Controls.Add(this.btnConnect);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "CS Client";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed_1);
             this.ResumeLayout(false);
 
@@ -82,6 +106,8 @@ namespace CS_Client2
         private System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.RichTextBox richResponse;
         private System.Windows.Forms.Button btnDisconnect;
+        private System.Windows.Forms.Button btnSendEvent;
+        private System.Windows.Forms.Button btnRequestData;
     }
 }
 

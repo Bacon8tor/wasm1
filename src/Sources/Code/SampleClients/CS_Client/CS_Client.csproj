@@ -106,6 +106,8 @@
   <PropertyGroup>
     <PostBuildEvent>xcopy "C:\MSFS SDK\SimConnect SDK\lib\SimConnect.dll" "$(TargetDir)" /y
 xcopy "C:\MSFS SDK\Samples\SimvarWatcher\SimConnect.cfg" "$(TargetDir)" /y
+xcopy "$(SolutionDir)\wasm_vars.txt" "$(TargetDir)" /y
+xcopy "$(SolutionDir)\events.txt" "$(TargetDir)" /y
 if $(ConfigurationName) == Release (
   echo "Release build."
 ) ELSE (
