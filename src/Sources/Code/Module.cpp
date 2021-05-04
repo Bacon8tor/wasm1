@@ -90,6 +90,10 @@ void RegisterVars() {
 
 		varID++;
 	}
+
+	//register_named_variable("I:XMLVAR_IceLightState");
+	//register_named_variable("I:XMLVAR_SwitchWingLightState");
+
 }
 
 extern "C" MSFS_CALLBACK void module_init(void)

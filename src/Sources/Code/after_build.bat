@@ -2,7 +2,7 @@
 
 SET FS_DRIVE=D:
 SET FS_PATH=%FS_DRIVE%\FS2020\Packages\Community
-SET ADDON_PATH=%FS_PATH%\mobiflight-event-module-test
+SET ADDON_PATH=%FS_PATH%\mobiflight-event-module-swm
 SET MODULE_PATH=%ADDON_PATH%\modules
 SET BUILD2_PATH=%ADDON_PATH%\build2.py
 SET MANIFEST_PATH=%ADDON_PATH%\manifest.json

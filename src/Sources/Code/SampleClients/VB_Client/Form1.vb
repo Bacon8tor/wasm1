@@ -151,7 +151,7 @@ Public Class Form1
 
     End Sub
 
-    Private Sub transmitEvent(ByVal eventName As String)
+    Private Sub transmitEvent(ByVal eventName As String, Optional ByVal eventData As Integer = 0)
 
         If simconnect IsNot Nothing Then
             If Not wasmEventNames.ContainsKey(eventName) Then
@@ -162,7 +162,7 @@ Public Class Form1
             Dim evtIndex As UInteger = wasmEventNames(eventName)
 
             displayText("Transmitting WASM event [" & eventName & "]")
-            simconnect.TransmitClientEvent(ENUM_VARIOUS.objectID, CType(evtIndex, ENUM_VARIOUS), 0, ENUM_VARIOUS.DefaultGroup, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY)
+            simconnect.TransmitClientEvent(ENUM_VARIOUS.objectID, CType(evtIndex, ENUM_VARIOUS), CType(eventData, UInteger), ENUM_VARIOUS.DefaultGroup, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY)
         End If
 
     End Sub
@@ -340,12 +340,14 @@ Public Class Form1
 
         requestSimVarData("MobiFlight.DA62_ICE_LIGHT_MAX_STATE_ENABLED")
         requestSimVarData("MobiFlight.DA62_DEICE_PUMP")
-
+        requestSimVarData("MobiFlight.DA62_IceLightState")
     End Sub
 
     Private Sub btnSendEvent_Click(sender As Object, e As EventArgs) Handles btnSendEvent.Click
 
-        transmitEvent("MobiFlight.AS1000_PFD_SOFTKEYS_6")
+
+        transmitEvent("MobiFlight.AS1000_PFD_SOFTKEYS_6", -10)
+        'transmitEvent("AXIS_RUDDER_SET", -16000)
 
     End Sub
 
