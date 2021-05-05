@@ -2,6 +2,7 @@
 //so we need a dummy placeholder here
 DUMMY#()
 //
+//This must always be at index 1 in the file
 CUST_VAR#()
 //
 //SWM
@@ -14,8 +15,12 @@ DA62_DEICE_PUMP_1#0 (>L:XMLVAR_DEICEPump)
 DA62_DEICE_PUMP_2#1 (>L:XMLVAR_DEICEPump)
 DA62_DEICE_MODE_MAX_ON#1 (>L:XMLVAR_IceLightMaxStateEnabled)
 DA62_DEICE_MODE_MAX_OFF#0 (>L:XMLVAR_IceLightMaxStateEnabled)
-DA62_DEICE_WINDSHIELD_ON#1 (>L:XMLVAR_DEICE_Windshield_PumpActive)
-DA62_DEICE_WINDSHIELD_OFF#0 (>L:XMLVAR_DEICE_Windshield_PumpActive)
+DA62_DEICE_WINDSHIELD_ON#1 (>L:XMLVAR_DEICE_Windshield_PumpActive) 1 (>L:DEICE_WINDSHIELD)
+DA62_DEICE_WINDSHIELD_OFF#0 (>L:XMLVAR_DEICE_Windshield_PumpActive) 0 (>L:DEICE_WINDSHIELD)
+DA62_ALT_COVER_CLOSED#0 (>L:DEICE_ALTernateCoverOpened)
+DA62_ALT_COVER_OPEN#1 (>L:DEICE_ALTernateCoverOpened)
+DA62_ALT_SW_DISABLED#(L:DEICE_ALTernateCoverOpened) 0 != if{ 1 (>L:XMLVAR_DEICEAlternateDisabled) 0 (>L:DEICE_ALT) }
+DA62_ALT_SW_ENABLED#(L:DEICE_ALTernateCoverOpened) 0 != if{ 0 (>L:XMLVAR_DEICEAlternateDisabled) 1 (>L:DEICE_ALT) }
 //
 AILERON_TRIM_LEFT#(>K:AILERON_TRIM_LEFT)
 AILERON_TRIM_RIGHT#(>K:AILERON_TRIM_RIGHT)
